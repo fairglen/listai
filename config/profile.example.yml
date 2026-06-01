@@ -1,0 +1,144 @@
+# listai Buyer Profile
+# Copy this file to config/profile.yml and fill in your details.
+# This is the single source of truth for your personal data across all modes.
+
+buyer:
+  full_name: "Maria Silva"
+  email: "maria@example.com"
+  phone: "+351 912 345 678"
+  current_location: "Lisboa, Portugal"
+  household_size: 2          # Number of people moving in
+  has_children: false        # Affects school weighting
+  has_pets: false            # Affects garden/balcony weighting
+
+search:
+  country: "Portugal"
+  # Cities or regions you'd buy in, in order of preference
+  target_cities:
+    - "Lisboa"
+    - "Porto"
+    - "Setúbal"
+  # Specific neighborhoods (freguesias / zonas) you love or want to focus on
+  preferred_areas:
+    - "Alvalade"
+    - "Campo de Ourique"
+    - "Arroios"
+    - "Anjos"
+  # Areas to exclude
+  excluded_areas:
+    - "Olivais Sul"
+    - "Chelas"
+  # How far from city center / specific point you'll accept
+  max_commute_minutes: 30
+  commute_anchor: "Marquês de Pombal, Lisboa"  # The point commutes are measured from
+  commute_modes:                                # In order of preference
+    - "public_transport"
+    - "walking"
+    - "cycling"
+
+budget:
+  currency: "EUR"
+  price_floor: 250000       # Bottom of your comfortable range. Below this, be skeptical
+                            # (likely needs heavy works, bad location, or legal issues).
+  target_price: 350000      # Sweet spot
+  max_price: 420000         # Hard ceiling
+  cash_buyer: false
+  financing:
+    pre_approved: false
+    bank: null              # e.g. "Millennium BCP", "Santander"
+    loan_to_value_pct: 80   # % of purchase price you'd borrow
+    monthly_payment_ceiling: 1400  # EUR/month you can comfortably pay
+  # Extra costs to factor in (Portugal-specific)
+  closing_costs_pct: 7      # IMT + stamp duty + notary + registry, rule of thumb 6-8%
+  renovation_budget: 20000  # EUR set aside for works
+
+property:
+  types:                    # apartment, house, townhouse, duplex, loft
+    - "apartment"
+  typology:                 # T0=studio, T1=1 bedroom, T2=2br, etc.
+    min: "T2"
+    max: null               # null = no upper cap. "T2 and above" — a bigger place is
+                            # never a reason to reject (it just has to fit the budget).
+                            # Set to e.g. "T4" only if you want a hard ceiling.
+  min_area_sqm: 70          # Minimum useful area (área útil)
+  min_bedrooms: 2
+  min_bathrooms: 1
+  floor_preference: "mid"   # ground, low, mid, high, top, any
+  # Year built (year of construction)
+  min_year_built: 1980
+  prefer_year_built: 2000
+  # Energy certificate (Portugal: A+ best, F worst)
+  min_energy_cert: "C"      # Won't consider below this
+
+must_haves:
+  # Things the listing MUST have. Score gets capped if missing.
+  - "elevator"              # if floor > 2
+  - "natural_light"         # south or west facing preferred
+  - "double_glazing"
+  - "central_heating_or_AC"
+  - "parking_or_garage"     # very important in Lisbon
+
+deal_breakers:
+  # Auto-reject if any of these appear in the listing
+  - "needs_full_renovation"
+  - "ground_floor_with_humidity_signs"
+  - "north_facing_only"
+  - "no_natural_light"
+  - "shared_bathroom"
+  - "alojamento_local_license"  # Often signals investment property, not residential
+
+nice_to_haves:
+  # Bumps the score, not required
+  - "balcony_or_terrace"
+  - "garden"
+  - "fireplace"
+  - "renovated_kitchen"
+  - "wood_floors"
+  - "high_ceilings"
+  - "view"
+  - "storage_arrumos"
+
+outdoor_space:
+  # Outdoor space is a big quality-of-life driver and a score-booster.
+  # Set the weight to how much it matters to you (0 = ignore, 5 = decisive).
+  weight: 3
+  prefer:                   # Any of these present bumps the score
+    - "garden"              # jardim / quintal — private green space
+    - "terrace"             # terraço — usually rooftop or large open
+    - "patio"               # pátio — enclosed ground-level outdoor
+    - "balcony"             # varanda — smaller, still valued
+  min_outdoor_sqm: 0        # Set >0 to require a minimum (e.g. 8 for a usable terrace)
+  sun_exposure: "any"       # any / south / west / south_or_west — sunny outdoor is worth more
+
+bonus_signals:
+  # Non-obvious features that add real value/flexibility. Treated as score boosters,
+  # never as requirements. Great for future-proofing (home office, guests, rental, growth).
+  weight: 2
+  prefer:
+    - "spare_room"          # An extra/empty room beyond your bedroom count (office, nursery, guest)
+    - "annex"               # anexo — separate annex/outbuilding (independent unit potential)
+    - "convertible_attic"   # sótão convertível — extra space you can finish later
+    - "convertible_basement" # cave / arrecadação you could turn into usable space
+    - "extra_storage_room"  # full storage room, not just a closet
+
+timeline:
+  ideal_move_in: "2026-09-01"
+  flexibility_months: 3
+  current_situation: "renting"   # renting / owning / staying with family
+  notice_to_give_months: 2
+
+preferences:
+  # Free-text notes the agent reads during evaluation
+  description: |
+    Looking for a bright, calm apartment in a building from 80s-90s or later.
+    Pre-1980 buildings are usually too humid and have no thermal insulation.
+    Prefer mid-floor with elevator, south or west-facing main rooms.
+    Quiet street matters more than central location.
+    Will renovate kitchen and bathrooms but won't gut.
+    Strong preference for buildings with at most 8 units (less neighbor noise, lower condomínio).
+
+risk_tolerance:
+  # 1-5 scale, used in Block F (Legal/Process)
+  renovation_appetite: 2        # 1 = move-in ready only, 5 = will gut and rebuild
+  legal_complexity_appetite: 1  # 1 = clean title only, 5 = will untangle inheritance issues
+  condo_dispute_appetite: 1     # 1 = no ongoing disputes, 5 = will inherit and fight

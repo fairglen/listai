@@ -1,0 +1,310 @@
+# Portal Scanner Configuration -- listai
+# Used by `listai scan` to discover new listings.
+#
+# Strategy (in order of preference):
+#   1. Direct portal search URL (deterministic, fast)
+#   2. WebSearch with site: filter (broader, may be stale)
+#   3. Playwright on JS-heavy portals (Idealista blocks bots, may need fallback)
+#
+# HOW TO CUSTOMIZE:
+#   1. Copy this file to portals.yml in the project root
+#   2. Edit title_filter and area_filter for your search
+#   3. Update search_queries with your areas and price range
+#   4. Add/remove agencies in tracked_agencies
+#
+# IMPORTANT: Idealista, Imovirtual, and Casa Sapo do not expose public APIs
+# the way Greenhouse/Ashby do for jobs. The scanner falls back to portal
+# search URLs + Playwright. Some portals (notably Idealista) actively block
+# scrapers; treat these as best-effort.
+#
+# ==========================================================================
+# CLOUDFLARE / BOT BLOCKING (read this before debugging "empty" scans)
+# ==========================================================================
+# ALL the major Portuguese portals — Idealista, Imovirtual, Casa Sapo,
+# SuperCasa, OLX, CustoJusto — sit behind Cloudflare and return HTTP 403 or
+# 503 to a plain fetch/WebFetch. You CANNOT scrape them with a raw HTTP call.
+# Options, in order of reliability:
+#   1. Playwright (browser_navigate + browser_snapshot) — renders the page
+#      like a real browser, usually gets past the challenge.
+#   2. Manual paste — open the URL yourself, copy listing URLs into
+#      data/pipeline.md, and let the pipeline mode process them.
+# Bank-owned and agency sites are usually lighter and may work with WebFetch.
+#
+# ==========================================================================
+# PORTAL URL SYNTAX CHEAT SHEET (verified live, 2026)
+# ==========================================================================
+# Each portal has its OWN syntax. The #1 cause of "no results" is a malformed
+# URL. The gotchas below are real — copy the patterns exactly.
+#
+# IDEALISTA  (https://www.idealista.pt/comprar-casas/<geo>/<filters>/)
+#   - PRICE USES UNDERSCORE:  preco-max_360000 , preco-min_250000
+#   - GEO:  lisboa-distrito = WHOLE district ; bare  lisboa = CITY only
+#   - Filter tokens (comma-separated): apartamentos,moradias,t2,t3,t4,
+#     tamanho-min_80,bom-estado,com-elevador,com-vista
+#   - Cheapest first:  append  ?ordem=precos-asc
+#
+# SUPERCASA  (https://supercasa.pt/comprar-casas/<geo>/<filters>)
+#   - Same family as Idealista BUT PRICE USES HYPHEN:
+#       preco-max-360000 , preco-min-250000 , area-min-80
+#
+# CASA SAPO  (https://casa.sapo.pt/...)
+#   - PRICE IS A QUERY STRING:  ?lp=<MIN>&gp=<MAX>   (lp = lowest, gp = greatest)
+#   - TYPOLOGY GOES BEFORE THE CONCELHO in the path
+#   - "comprar-casas" path = apartments + houses together
+#
+# IMOVIRTUAL  (OLX stack — https://www.imovirtual.com/pt/resultados/comprar/...)
+#   - GEO IS PATH-BASED (not a query param):
+#       /lisboa          = whole DISTRICT
+#       /lisboa/lisboa   = Lisboa CITY
+#       /lisboa/sintra   = Sintra concelho
+#   - TYPES IN PATH:  apartamento,moradia  and typology  t2,t3
+#   - PRICE/AREA ARE QUERY PARAMS:  ?priceMin=&priceMax=&areaMin=
+#
+# OLX  (https://www.olx.pt/...)
+#   - WEAK geo + typology filtering. Search is mostly free-text (q-...).
+#     Expect noise; only use as a supplementary source.
+# ==========================================================================
+
+# -- Title / description filter --
+# Used to decide if a listing matches your search.
+# At least 1 positive must match AND 0 negatives must match (case-insensitive).
+
+listing_filter:
+  positive:
+    # Typology and size — "T2 and above" (no upper cap)
+    - "T2"
+    - "T3"
+    - "T4"
+    - "apartamento"
+    - "moradia"
+    # Features
+    - "elevador"
+    - "varanda"
+    - "terraço"
+    - "garagem"
+    - "lugar de garagem"
+    - "remodelado"
+    - "renovado"
+  negative:
+    # Auto-skip if any appears in title/description
+    - "necessita obras profundas"
+    - "para reabilitação total"
+    - "T0"
+    - "T1 "
+    - "alojamento local"
+    - "rentabilidade garantida"
+    - "investimento"
+    - "loja"
+    - "armazém"
+    - "terreno"
+
+  # Buildings or areas you specifically want to avoid
+  excluded_keywords:
+    - "bairro social"
+
+# -- Area filter --
+# Listings must be in one of these areas/freguesias.
+area_filter:
+  cities:
+    - "Lisboa"
+    - "Porto"
+  freguesias:
+    - "Alvalade"
+    - "Areeiro"
+    - "Arroios"
+    - "Avenidas Novas"
+    - "Campo de Ourique"
+    - "Estrela"
+    - "Misericórdia"
+    - "Penha de França"
+    - "Santo António"
+    - "São Vicente"
+
+# -- Price filter --
+# Reject listings outside this range immediately.
+price_filter:
+  min: 200000
+  max: 420000
+  currency: "EUR"
+  # €/m² ceiling (reject above this even if total price is OK)
+  max_eur_per_sqm: 5500
+
+# -- Search queries --
+# Each query triggers a portal search. Adjust the URLs to match your filters.
+# `enabled: false` skips a query without removing it.
+
+search_queries:
+
+  # =====================================================================
+  # GENERAL PORTALS (Cloudflare-protected — need Playwright or manual paste)
+  # =====================================================================
+
+  # -- Idealista --
+  # Syntax: price uses UNDERSCORE (preco-max_NNN). Geo: "lisboa-distrito" = whole
+  # district, bare "lisboa" = city only. Sort cheapest with ?ordem=precos-asc.
+  - name: Idealista — Lisboa city, T2+ up to 420k
+    portal: idealista
+    url: "https://www.idealista.pt/comprar-casas/lisboa/com-preco-max_420000,preco-min_250000,apartamentos,t2,t3,t4,tamanho-min_80,bom-estado,com-elevador/?ordem=precos-asc"
+    enabled: true
+
+  - name: Idealista — Lisboa district (wider net), T2+ up to 420k
+    portal: idealista
+    url: "https://www.idealista.pt/comprar-casas/lisboa-distrito/com-preco-max_420000,preco-min_250000,apartamentos,t2,t3,t4,tamanho-min_80/?ordem=precos-asc"
+    enabled: false
+
+  - name: Idealista — Porto city, T2+ up to 350k
+    portal: idealista
+    url: "https://www.idealista.pt/comprar-casas/porto/com-preco-max_350000,preco-min_200000,apartamentos,t2,t3,t4,com-elevador/?ordem=precos-asc"
+    enabled: true
+
+  # -- Imovirtual (OLX stack) --
+  # Syntax: geo is PATH-based. /lisboa = district, /lisboa/lisboa = city,
+  # /lisboa/sintra = Sintra. Types & typology in path. Price/area as query params.
+  - name: Imovirtual — Lisboa city, T2+ up to 420k
+    portal: imovirtual
+    url: "https://www.imovirtual.com/pt/resultados/comprar/apartamento,moradia/lisboa/lisboa?priceMax=420000&priceMin=250000&areaMin=80"
+    enabled: true
+
+  - name: Imovirtual — Porto city, T2+ up to 350k
+    portal: imovirtual
+    url: "https://www.imovirtual.com/pt/resultados/comprar/apartamento,moradia/porto/porto?priceMax=350000&priceMin=200000&areaMin=80"
+    enabled: true
+
+  # -- Casa Sapo --
+  # Syntax: price is a QUERY string ?lp=MIN&gp=MAX. Typology goes BEFORE the
+  # concelho in the path. "comprar-casas" = apartments + houses together.
+  - name: Casa Sapo — Lisboa, T2+ 250-420k
+    portal: casasapo
+    url: "https://casa.sapo.pt/comprar-casas/t2-t3-t4/lisboa/?lp=250000&gp=420000"
+    enabled: true
+
+  - name: Casa Sapo — Porto, T2+ 200-350k
+    portal: casasapo
+    url: "https://casa.sapo.pt/comprar-casas/t2-t3-t4/porto/?lp=200000&gp=350000"
+    enabled: true
+
+  # -- SuperCasa --
+  # Syntax: same family as Idealista BUT price uses HYPHEN (preco-max-NNN),
+  # and area filter is area-min-NN.
+  - name: SuperCasa — Lisboa, T2+ 250-420k
+    portal: supercasa
+    url: "https://supercasa.pt/comprar-casas/lisboa/preco-min-250000,preco-max-420000,area-min-80,t2,t3,t4"
+    enabled: true
+
+  # -- OLX (weak filtering, noisy — supplementary only) --
+  # Geo/typology filtering is poor; search is largely free-text (q-...).
+  - name: OLX — Lisboa apartamentos (noisy, supplementary)
+    portal: olx
+    url: "https://www.olx.pt/imoveis/apartamentos-casas/venda/lisboa/?search%5Bfilter_float_price%3Afrom%5D=250000&search%5Bfilter_float_price%3Ato%5D=420000"
+    enabled: false
+
+  # =====================================================================
+  # BANK-OWNED / REPOSSESSED PROPERTIES (often below market; lighter sites,
+  # frequently scrapeable with WebFetch). Worth checking — good deals hide here.
+  # =====================================================================
+
+  - name: Santander Imóveis
+    portal: santander
+    url: "https://imoveis.santander.pt/"
+    notes: "Bank-owned stock from Santander. Filter by Lisboa/Porto on site."
+    enabled: true
+
+  - name: BPI Expresso Imobiliário (Quatru)
+    portal: bpi
+    url: "https://bpiexpressoimobiliario.pt/imoveis-bpi"
+    notes: "BPI / Quatru repossessed properties."
+    enabled: true
+
+  - name: Caixa Imobiliário (CGD)
+    portal: caixa
+    url: "https://www.caixaimobiliario.pt/"
+    notes: "Caixa Geral de Depósitos bank-owned portfolio."
+    enabled: true
+
+  - name: Imobancos (multi-bank aggregator)
+    portal: imobancos
+    url: "https://imobancos.pt/en"
+    notes: "Aggregates bank-owned listings across several Portuguese banks."
+    enabled: true
+
+  - name: Casa Sapo — Bank Properties section
+    portal: casasapo
+    url: "https://casa.sapo.pt/en_gb/bank-properties/"
+    notes: "Casa Sapo's dedicated bank-owned listings feed."
+    enabled: true
+
+  # =====================================================================
+  # AUCTIONS (high diligence required — read the caderno de encargos, factor
+  # in occupancy/eviction risk and deposits). Disabled by default on purpose.
+  # =====================================================================
+
+  - name: e-leilões (judicial auctions)
+    portal: eleiloes
+    url: "https://www.e-leiloes.pt/"
+    notes: "Official judicial auction platform. Big discounts but legally heavy — only for confident buyers."
+    enabled: false
+
+  # =====================================================================
+  # SOCIAL / CLASSIFIEDS (manual review — lots of noise, but direct-from-owner
+  # deals with no agency fee show up here). Disabled by default.
+  # =====================================================================
+
+  - name: Facebook Marketplace — Lisbon property for sale
+    portal: facebook
+    url: "https://www.facebook.com/marketplace/lisbon/propertyforsale/"
+    notes: "Direct-from-owner listings. No API — review manually, paste good ones into pipeline."
+    enabled: false
+
+  # =====================================================================
+  # WEBSEARCH FALLBACK
+  # =====================================================================
+
+  - name: Google — Lisboa T2+ below market
+    portal: websearch
+    query: 'site:idealista.pt OR site:imovirtual.com OR site:casa.sapo.pt "Lisboa" "T2" OR "T3" OR "T4" "250000" OR "300000" OR "350000"'
+    enabled: false
+
+# -- Tracked agencies --
+# Specific agencies whose own websites you want to check directly.
+# Many small Portuguese agencies don't list everything on portals.
+
+tracked_agencies:
+
+  # -- Big mass-market networks (best default coverage, most stock) --
+
+  - name: RE/MAX Portugal
+    website: "https://www.remax.pt/comprar"
+    notes: "Largest network in PT. Huge inventory nationwide. Start here."
+    enabled: true
+
+  - name: ERA Portugal
+    website: "https://www.era.pt/comprar"
+    notes: "Mass market, one of the biggest networks. Strong in Lisboa & Porto."
+    enabled: true
+
+  - name: Century 21 Portugal
+    website: "https://www.century21.pt/comprar"
+    notes: "Mass market, top-3 network. Broad coverage."
+    enabled: true
+
+  - name: iad Portugal
+    website: "https://www.iadportugal.pt/comprar"
+    notes: "Large network of independent consultants. Often unique listings."
+    enabled: true
+
+  - name: Zome
+    website: "https://www.zome.pt/comprar"
+    notes: "Tech-forward network, growing fast. Good UX and data."
+    enabled: true
+
+  # -- High end / luxury (enable if your budget reaches here) --
+
+  - name: Engel & Völkers Portugal
+    website: "https://www.engelvoelkers.com/pt/pt/buscar/?q=lisboa&businessArea=residential&sortOrder=DESC&sortField=sortPrice"
+    notes: "High end. Lisbon center, Cascais, Sintra."
+    enabled: false
+
+  - name: Sotheby's International Realty Portugal
+    website: "https://www.portugalsothebysrealty.com/eng/sales"
+    notes: "Luxury. Lisbon, Cascais, Comporta, Algarve."
+    enabled: false

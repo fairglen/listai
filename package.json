@@ -1,0 +1,10 @@
+{
+  "name": "listai",
+  "version": "0.1.0",
+  "description": "AI-powered property search pipeline for Portugal (Idealista, Imovirtual, Casa Sapo, etc).",
+  "type": "module",
+  "private": true,
+  "scripts": {},
+  "_comment": "This system is agent-driven (Markdown modes + YAML config); no build or runtime scripts are shipped. If you add optional helper scripts (e.g. scan.mjs, merge-tracker.mjs), declare them under scripts and add js-yaml as a dependency.",
+  "dependencies": {}
+}

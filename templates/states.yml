@@ -1,0 +1,72 @@
+# listai -- Canonical States
+# Source of truth for the listings tracker.
+#
+# Rule: The status field in data/listings.md must contain EXACTLY one of
+# these values (case-insensitive). No markdown bold, no dates, no extra text.
+
+states:
+  - id: evaluated
+    label: Evaluated
+    aliases: [avaliado]
+    description: Report completed, pending decision
+    group: evaluated
+
+  - id: contacted
+    label: Contacted
+    aliases: [contactado]
+    description: Reached out to agent, awaiting reply
+    group: contacted
+
+  - id: visit_scheduled
+    label: Visit Scheduled
+    aliases: [visita_marcada, visit-scheduled]
+    description: Visit booked
+    group: visit_scheduled
+
+  - id: visited
+    label: Visited
+    aliases: [visitado]
+    description: Visit done, deciding next step
+    group: visited
+
+  - id: offer_sent
+    label: Offer Sent
+    aliases: [proposta_enviada, offer-sent]
+    description: Purchase offer submitted
+    group: offer_sent
+
+  - id: negotiating
+    label: Negotiating
+    aliases: [negociacao, negotiation]
+    description: Active negotiation on price or terms
+    group: negotiating
+
+  - id: under_contract
+    label: Under Contract
+    aliases: [cpcv, under-contract, sob_contrato]
+    description: CPCV (Contrato Promessa) signed
+    group: under_contract
+
+  - id: closed
+    label: Closed
+    aliases: [escritura, deed, fechado]
+    description: Deed (escritura) signed, property bought
+    group: closed
+
+  - id: rejected
+    label: Rejected
+    aliases: [rejeitado, rejected_by_seller, fell_through]
+    description: Offer rejected, deal fell through, or we withdrew
+    group: rejected
+
+  - id: discarded
+    label: Discarded
+    aliases: [descartado, skip]
+    description: Skipped after evaluation, doesn't fit
+    group: discarded
+
+  - id: off_market
+    label: Off Market
+    aliases: [fora_de_mercado, off-market, sold]
+    description: Listing closed or sold before we acted
+    group: off_market

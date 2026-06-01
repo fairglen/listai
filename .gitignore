@@ -1,0 +1,44 @@
+# ============================================================
+# listai .gitignore
+# Goal: NEVER commit personal data. The User Layer (see DATA_CONTRACT.md)
+# stays local; only the *.example / *.template seeds are committed.
+# ============================================================
+
+# -- Dependencies / build --
+node_modules/
+output/
+*.log
+
+# -- OS / editor cruft --
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# ============================================================
+# USER LAYER — personal data, never commit
+# ============================================================
+
+# Buyer profile & customizations (committed: *.example / *.template seeds)
+config/profile.yml
+modes/_profile.md
+portals.yml
+
+# Tracker, pipeline, scan history (committed: data/*.example.md seeds)
+data/listings.md
+data/pipeline.md
+data/scan-history.tsv
+
+# Generated evaluations (keep the folder, ignore the reports)
+reports/*
+!reports/.gitkeep
+
+# Scan/eval working files
+batch/
+
+# Local overrides (any *.local.* convention)
+*.local.yml
+*.local.md
+.env
+.env.*
