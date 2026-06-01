@@ -52,6 +52,7 @@ There is no `/listai` command. Once the `listai` folder is open in your assistan
 | "draft an offer" | Purchase-offer letter (you review before sending) |
 | "show my pipeline" / "status" | Tracker overview |
 | "process the pipeline" | Batch-evaluates URLs queued in `data/pipeline.md` |
+| "export as a spreadsheet" / "make a sheets file" | Builds a shareable `.xlsx` (Excel / Google Sheets) in `output/` |
 
 The agent picks the right mode (in `modes/`) automatically based on what you ask.
 
@@ -120,7 +121,7 @@ When you say "scan," the agent works through every `enabled: true` query in `por
 ## Files the system owns (auto-updatable)
 
 - `AGENTS.md`, `CLAUDE.md`, `modes/_shared.md`, `modes/listing.md`, and all other modes
-- `templates/*` (and any optional `*.mjs` helper scripts you add — none ship by default)
+- `templates/*`, and `export-xlsx.mjs` (the only shipped script — a zero-dependency CSV/TSV→XLSX exporter)
 
 See `DATA_CONTRACT.md` for the full split. **Personalization always goes in the files you own** — when you ask to change archetypes, weightings, scripts, or portals, the agent edits those, never the shared system files.
 

@@ -32,7 +32,8 @@ The engine: prompts, scoring rules, scripts, templates. Updated by `update-syste
 | `modes/_profile.template.md` | Template copied to `_profile.md` on first run |
 | `modes/listing.md`, `modes/contact.md`, etc. | Mode definitions |
 | `templates/*` | Boilerplate (states, portals example, message templates) |
-| `*.mjs` | Optional helper scripts, if you add them (none ship by default — the system is agent-driven) |
+| `export-xlsx.mjs` | Shipped helper: zero-dependency CSV/TSV → XLSX exporter (used by `export` mode) |
+| `*.mjs` (other) | Any further optional helper scripts you add |
 | `VERSION` | Semver of the system layer |
 
 **Rule:** Don't put personal data here. If you customize something in this layer, an update will overwrite it.

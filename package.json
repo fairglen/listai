@@ -4,7 +4,9 @@
   "description": "AI-powered property search pipeline for Portugal (Idealista, Imovirtual, Casa Sapo, etc).",
   "type": "module",
   "private": true,
-  "scripts": {},
-  "_comment": "This system is agent-driven (Markdown modes + YAML config); no build or runtime scripts are shipped. If you add optional helper scripts (e.g. scan.mjs, merge-tracker.mjs), declare them under scripts and add js-yaml as a dependency.",
+  "scripts": {
+    "export": "node export-xlsx.mjs"
+  },
+  "_comment": "Agent-driven (Markdown modes + YAML config). The only shipped script is export-xlsx.mjs (CSV/TSV -> XLSX), which uses Node built-ins ONLY — zero dependencies, no install. Keep it that way. Usage: npm run export -- <output.xlsx> <input.csv|tsv> [more...]",
   "dependencies": {}
 }

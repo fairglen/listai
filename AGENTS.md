@@ -128,6 +128,7 @@ Default modes are English. If the user is searching in Portugal and prefers Port
 | Asks about application status | `tracker` |
 | Searches portals | `scan` |
 | Processes pending URLs | `pipeline` |
+| Wants a spreadsheet / xlsx / shareable list / Drive export | `export` |
 
 ### Buyer Profile Source of Truth
 
