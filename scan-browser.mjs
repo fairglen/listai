@@ -178,6 +178,21 @@ try {
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: opts.timeout });
       await page.waitForTimeout(opts.wait);
 
+      // Headful: a human is watching — give them time to solve a CAPTCHA / "press & hold".
+      // Poll until real listings appear (or a long deadline), instead of reading on a timer.
+      if (opts.headful) {
+        const deadline = Date.now() + Math.max(opts.wait, 180000);
+        process.stderr.write('  (headful: if you see a challenge/CAPTCHA, solve it in the window now — waiting for listings to load…)\n');
+        while (Date.now() < deadline) {
+          const probe = await extract(page);
+          if (probe.links.length > 0 && probe.text.length > 500) {
+            process.stderr.write('  (content detected — continuing)\n');
+            break;
+          }
+          await page.waitForTimeout(2500);
+        }
+      }
+
       // If we hit a Cloudflare interstitial, give it longer (and a chance to auto-clear).
       let info = await extract(page);
       const looksBlocked = CHALLENGE_HINTS.some((h) => info.title.toLowerCase().includes(h) || info.text.slice(0, 400).toLowerCase().includes(h));
