@@ -91,7 +91,12 @@ Want me to run full evaluations on the high-fit ones now?
 
 ## Rules
 
-1. **Most portals block plain fetches (HTTP 403).** Casa Sapo serves plain requests; Idealista/Imovirtual/SuperCasa/OLX/CustoJusto don't. For the blocked ones, use the optional **browser scanner** — `node scan-browser.mjs "<url>"` (needs Playwright; see `docs/browser-scanning.md`). It clears Imovirtual + SuperCasa reliably; **Idealista (DataDome) stays blocked** even via headless — fall back to its official API, email alerts, or manual paste. If Playwright isn't installed, the script says so and the core scan still works on Casa Sapo + WebSearch.
+1. **Most portals block plain fetches (HTTP 403).** Casa Sapo serves plain requests; Idealista/Imovirtual/SuperCasa/OLX/CustoJusto don't. Tiered fallback (see `docs/browser-scanning.md`):
+   - **Casa Sapo** — plain `WebFetch` works (rate-limited; one query at a time).
+   - **Imovirtual / SuperCasa / OLX / CustoJusto** — use the browser scanner: `node scan-browser.mjs "<url>" --out output/scan-<portal>-<area>.txt`, then read the output file and triage. (Needs Playwright installed.)
+   - **Idealista (DataDome)** — needs **stealth**: `node scan-browser.mjs "<url>" --stealth --profile output/.idealista-state.json --out output/idealista-<area>.txt`. The **first** run must be done by the **user** with `--headful` to solve the one-time challenge (the agent can't open a window); after that the saved cookie is reused and the agent can run it. If it still blocks, fall back to Idealista's official API, email alerts, or manual paste.
+   - If Playwright isn't installed, the script prints install steps and the core scan still works on Casa Sapo + WebSearch.
+   - **When the user says "scan Idealista"**: if `output/.idealista-state.json` exists, run the stealth command above; if not, tell the user to do the one-time headful first run (give them the exact command from `docs/browser-scanning.md`).
 2. **Don't double-count.** Same listing on multiple portals → use URL canonicalization (strip query params, strip trailing slashes).
 3. **Respect portal terms.** Don't hammer with concurrent requests. One query at a time.
 4. **scan-history.tsv columns:** `date`, `url`, `portal`, `address`, `price`, `quick_score`, `decision`.
