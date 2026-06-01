@@ -19,7 +19,7 @@ A vanilla headless browser is **not** a silver bullet — anti-bot strength vari
 | **Imovirtual** | ❌ 403 | ✅ **works** — full listings |
 | **SuperCasa** | ❌ 403 | ✅ **works** — full listings |
 | OLX / CustoJusto | ❌ 403 | ⚠️ usually works, verify |
-| **Idealista** | ❌ 403 | ❌ **still blocked** (DataDome) — returns an empty shell |
+| **Idealista** | ❌ 403 | ❌ plain headless — needs `--stealth` + a one-time headful solve from a home IP (see "Stealth mode") |
 
 So the browser scanner roughly **doubles** portal coverage (adds Imovirtual +
 SuperCasa, the two biggest after Idealista). **Idealista needs more** — a stealth
@@ -58,6 +58,49 @@ runs the script, reads the output, and updates the pipeline.
 The `STATUS:` line in the output says `ok` or `BLOCKED` so you know whether the
 challenge cleared.
 
+## Stealth mode — for Idealista / DataDome
+
+The `--stealth` flag turns on the anti-bot stack: it uses **real Google Chrome**
+(not bundled Chromium), **masks the automation fingerprints** DataDome looks for
+(`navigator.webdriver`, plugins, WebGL, etc.), and **warms up via the portal
+homepage** so the visit looks organic. Combine it with `--profile` to **save and
+reuse the cleared session cookie** (including DataDome's `datadome` clearance).
+
+```bash
+# FIRST run — headful, so you can solve the one-time challenge by hand:
+node scan-browser.mjs "https://www.idealista.pt/comprar-casas/sintra/com-preco-max_360000,preco-min_250000,t2,t3,t4/" \
+  --stealth --headful --profile output/.idealista-state.json --out output/idealista-sintra.txt
+
+# LATER runs — reuse the saved cookie (can be headless):
+node scan-browser.mjs "<idealista url>" --stealth --profile output/.idealista-state.json --out output/idealista-sintra.txt
+```
+
+### What YOU need to do (the levers the script can't pull for you)
+
+1. **Run it on your own computer (home internet), not a server.** This is the
+   single biggest factor. DataDome trusts residential IPs and instantly blocks
+   datacenter/cloud ones — a headless run from a cloud IP fails *even with*
+   stealth (measured). On your own Mac at home you already have a residential IP.
+2. **Have Google Chrome installed.** `--stealth` uses it via `channel: "chrome"`;
+   it auto-falls back to bundled Chromium (weaker) if Chrome isn't found.
+3. **Do the first run with `--headful`.** A window opens; if Idealista shows a
+   "press & hold" / CAPTCHA challenge, **solve it once by hand.** The script then
+   saves the cleared cookie to your `--profile` file. Later runs reuse it and can
+   run headless until it expires (then just repeat the headful solve).
+4. **Go slow and low-volume.** A few pages, with the built-in delays. Hammering
+   re-triggers the wall and risks an IP/account ban.
+
+### Honest expectations
+
+Stealth meaningfully raises your odds but is **not guaranteed** — DataDome is an
+arms race and updates regularly. If it keeps failing even headful from home, fall
+back to the **official Idealista API** or **email alerts** (below), or a paid
+**unlocker** (Zyte / ScraperAPI / Bright Data / Apify's Idealista actor) which
+bundles residential proxies + fingerprinting + CAPTCHA solving.
+
+The `--profile` session file lands in `output/` (gitignored) — it holds cookies,
+so it's personal; never commit it.
+
 ## Alternative: a Playwright MCP (drive the browser inside the chat)
 
 If you'd rather the agent control a browser directly in conversation (no script),
@@ -77,6 +120,9 @@ best for one-off "open this and look" and for pages that need a click or scroll.
 Idealista uses DataDome, which detects plain headless Chromium. Options, cheapest
 first:
 
+0. **`--stealth` from your home machine** (see "Stealth mode" above) — real Chrome
+   + fingerprint masking + a one-time headful challenge solve + cookie reuse. Free,
+   best-effort, your first thing to try.
 1. **Official Idealista API** — free tier, OAuth key on request (~100 calls/month).
    Legit and stable; apply at the Idealista developer portal.
 2. **Stealth** — `playwright-extra` + `puppeteer-extra-plugin-stealth` sometimes
