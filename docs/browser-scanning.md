@@ -98,6 +98,43 @@ back to the **official Idealista API** or **email alerts** (below), or a paid
 **unlocker** (Zyte / ScraperAPI / Bright Data / Apify's Idealista actor) which
 bundles residential proxies + fingerprinting + CAPTCHA solving.
 
+### Stealth engines (undetected-chromedriver-style)
+
+`--stealth` auto-selects the best browser engine that's installed, in this order
+(then falls back to plain Playwright + the built-in fingerprint masking):
+
+1. **patchright** — patched Playwright, drop-in, hides the CDP/`Runtime.enable`
+   leak DataDome detects. The Node equivalent of undetected-chromedriver. Best.
+   ```bash
+   npm install patchright && npx patchright install chromium
+   ```
+2. **playwright-extra + puppeteer-extra-plugin-stealth** — the same stealth-plugin
+   family used with Puppeteer.
+   ```bash
+   npm install playwright-extra puppeteer-extra-plugin-stealth
+   ```
+
+Install either, then run with `--stealth` as usual — the scanner uses it
+automatically and prints `engine="patchright"` (etc.).
+
+### If you get hard-banned ("uso indevido / acesso bloqueado")
+
+A page like *"Foi detetado um uso indevido. O acesso foi bloqueado"* with an
+incident ID is a **hard IP/fingerprint ban**, not a CAPTCHA. No stealth flag beats
+it on the same IP. To recover:
+
+1. **Stop hitting the site** — bans are often temporary (minutes to a day or two).
+2. **Change IP** — phone hotspot, a different network, or a **residential/mobile
+   proxy**. DataDome weights IP reputation most heavily; a fresh good IP is the
+   single biggest lever (this is what made undetected-chromedriver work on other
+   sites — driver **plus** a clean IP).
+3. **Then** use a stealth engine (patchright) + go slow + solve the CAPTCHA once +
+   reuse the session. Low volume, human pace.
+
+If it keeps banning, it isn't worth the arms race for a personal search — the
+**official Idealista API** or **email alerts** are the sane, durable paths, and
+Imovirtual + SuperCasa + Casa Sapo already cover most of the same inventory.
+
 The `--profile` session file lands in `output/` (gitignored) — it holds cookies,
 so it's personal; never commit it.
 

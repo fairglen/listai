@@ -63,22 +63,48 @@ if (urls.length === 0) {
   process.exit(1);
 }
 
-// ---- load Playwright, or explain how to get it (keeps the core zero-dep) ----
+// ---- load a browser engine, best stealth first (keeps the core zero-dep) ----
+// Ladder (only when --stealth): patchright (undetected-chromedriver-style, drop-in)
+// -> playwright-extra + stealth plugin -> plain playwright. Whichever is installed.
 let chromium;
+let engine = 'playwright';
+async function loadEngine(preferStealth) {
+  if (preferStealth) {
+    try {
+      const m = await import('patchright'); // patched Playwright — hides the CDP leak
+      return { chromium: m.chromium, engine: 'patchright' };
+    } catch {
+      /* not installed */
+    }
+    try {
+      const pe = await import('playwright-extra');
+      const stealth = (await import('puppeteer-extra-plugin-stealth')).default;
+      pe.chromium.use(stealth());
+      return { chromium: pe.chromium, engine: 'playwright-extra+stealth' };
+    } catch {
+      /* not installed */
+    }
+  }
+  const m = await import('playwright');
+  return { chromium: m.chromium, engine: 'playwright' };
+}
 try {
-  ({ chromium } = await import('playwright'));
+  ({ chromium, engine } = await loadEngine(opts.stealth));
 } catch {
   console.error(
     [
       '',
-      'Playwright is not installed — this OPTIONAL browser scanner needs it.',
+      'No browser engine is installed — this OPTIONAL scanner needs one.',
       'The rest of listai works without it; only bot-blocked portals need a real browser.',
       '',
-      'Enable it (one time):',
-      '  npm install playwright',
-      '  npx playwright install chromium',
+      'Baseline (one time):',
+      '  npm install playwright && npx playwright install chromium',
       '',
-      'Then re-run your command. See docs/browser-scanning.md for details.',
+      'For tough anti-bot (DataDome / Idealista), add a stealth engine — pick one:',
+      '  npm install patchright && npx patchright install chromium      # best (drop-in)',
+      '  npm install playwright-extra puppeteer-extra-plugin-stealth     # alt',
+      '',
+      'Then re-run with --stealth. See docs/browser-scanning.md.',
       '',
     ].join('\n')
   );
@@ -133,7 +159,7 @@ try {
     const channel = opts.channel || 'chrome';
     try {
       browser = await chromium.launch({ ...launchOpts, channel });
-      process.stderr.write(`  (stealth: using real browser channel "${channel}")\n`);
+      process.stderr.write(`  (stealth: engine="${engine}", channel="${channel}")\n`);
     } catch (e) {
       process.stderr.write(`  (channel "${channel}" unavailable — falling back to bundled Chromium: ${e.message.split('\n')[0]})\n`);
       browser = await chromium.launch(launchOpts);
