@@ -5,8 +5,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "export": "node export-xlsx.mjs"
+    "export": "node export-xlsx.mjs",
+    "scan:browser": "node scan-browser.mjs"
   },
-  "_comment": "Agent-driven (Markdown modes + YAML config). The only shipped script is export-xlsx.mjs (CSV/TSV -> XLSX), which uses Node built-ins ONLY — zero dependencies, no install. Keep it that way. Usage: npm run export -- <output.xlsx> <input.csv|tsv> [more...]",
+  "_comment": "Agent-driven (Markdown modes + YAML config). Shipped scripts use Node built-ins ONLY — zero dependencies, no install: export-xlsx.mjs (CSV/TSV -> XLSX) and scan-browser.mjs (browser scanner). scan-browser.mjs OPTIONALLY uses Playwright if you install it (npm install playwright && npx playwright install chromium) — it is NOT a declared dependency, so the core stays install-free. See docs/browser-scanning.md.",
   "dependencies": {}
 }

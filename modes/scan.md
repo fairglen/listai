@@ -91,7 +91,7 @@ Want me to run full evaluations on the high-fit ones now?
 
 ## Rules
 
-1. **Idealista actively blocks scrapers.** If direct fetch fails repeatedly, fall back to Playwright OR warn the user that Idealista needs manual paste.
+1. **Most portals block plain fetches (HTTP 403).** Casa Sapo serves plain requests; Idealista/Imovirtual/SuperCasa/OLX/CustoJusto don't. For the blocked ones, use the optional **browser scanner** — `node scan-browser.mjs "<url>"` (needs Playwright; see `docs/browser-scanning.md`). It clears Imovirtual + SuperCasa reliably; **Idealista (DataDome) stays blocked** even via headless — fall back to its official API, email alerts, or manual paste. If Playwright isn't installed, the script says so and the core scan still works on Casa Sapo + WebSearch.
 2. **Don't double-count.** Same listing on multiple portals → use URL canonicalization (strip query params, strip trailing slashes).
 3. **Respect portal terms.** Don't hammer with concurrent requests. One query at a time.
 4. **scan-history.tsv columns:** `date`, `url`, `portal`, `address`, `price`, `quick_score`, `decision`.

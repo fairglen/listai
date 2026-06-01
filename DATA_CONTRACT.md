@@ -33,6 +33,8 @@ The engine: prompts, scoring rules, scripts, templates. Updated by `update-syste
 | `modes/listing.md`, `modes/contact.md`, etc. | Mode definitions |
 | `templates/*` | Boilerplate (states, portals example, message templates) |
 | `export-xlsx.mjs` | Shipped helper: zero-dependency CSV/TSV → XLSX exporter (used by `export` mode) |
+| `scan-browser.mjs` | Shipped helper: optional Playwright browser scanner for bot-blocked portals (opt-in; Playwright not a declared dep) |
+| `docs/*` | Setup/usage docs (e.g. `browser-scanning.md`) |
 | `*.mjs` (other) | Any further optional helper scripts you add |
 | `VERSION` | Semver of the system layer |
 

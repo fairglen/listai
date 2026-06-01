@@ -107,7 +107,7 @@ When you say "scan," the agent works through every `enabled: true` query in `por
 
 **Portal reality (Portugal, 2026):**
 - **Casa Sapo** and **SuperCasa** are usually fetchable directly (but rate-limit if hammered — the scan runs one query at a time on purpose).
-- **Idealista** and **Imovirtual** block bots (HTTP 403). The agent will fall back to Playwright if available, otherwise it tells you to **paste the listing/search URL manually**.
+- **Idealista, Imovirtual, SuperCasa, OLX, CustoJusto** block bots (HTTP 403). An **optional browser scanner** (`scan-browser.mjs`, uses Playwright if you install it) clears **Imovirtual + SuperCasa**; **Idealista** stays blocked (DataDome) — use its official API, email alerts, or paste. The browser scanner is opt-in and never installed by default — see [docs/browser-scanning.md](docs/browser-scanning.md).
 - **Bank-owned** (Santander, BPI/Quatru, Caixa Imobiliário, Imobancos), **auctions** (e-leilões), and **Facebook Marketplace** are best checked manually — they're configured but marked `enabled: false` by default.
 
 ## Files you own (never auto-updated)
@@ -121,7 +121,7 @@ When you say "scan," the agent works through every `enabled: true` query in `por
 ## Files the system owns (auto-updatable)
 
 - `AGENTS.md`, `CLAUDE.md`, `modes/_shared.md`, `modes/listing.md`, and all other modes
-- `templates/*`, and `export-xlsx.mjs` (the only shipped script — a zero-dependency CSV/TSV→XLSX exporter)
+- `templates/*`, `docs/*`, and the shipped scripts: `export-xlsx.mjs` (zero-dep CSV/TSV→XLSX) and `scan-browser.mjs` (optional Playwright scanner)
 
 See `DATA_CONTRACT.md` for the full split. **Personalization always goes in the files you own** — when you ask to change archetypes, weightings, scripts, or portals, the agent edits those, never the shared system files.
 
